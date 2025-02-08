@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');  // Handles CORS
 
 function is_prime($num) {
     if ($num < 2) return false;
@@ -33,7 +34,7 @@ function fetch_fun_fact($num) {
     return isset($data['text']) ? $data['text'] : "No fun fact available.";
 }
 
-if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
+if (!isset($_GET['number']) || !ctype_digit($_GET['number'])) {
     http_response_code(400);
     echo json_encode([
         "number" => $_GET['number'] ?? null,
@@ -45,7 +46,10 @@ if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
 $number = intval($_GET['number']);
 $properties = [];
 
-if (is_armstrong($number)) $properties[] = "armstrong";
+if (is_armstrong($number)) {
+    $properties[] = "armstrong";
+}
+
 $properties[] = ($number % 2 === 0) ? "even" : "odd";
 
 $response = [
@@ -57,5 +61,6 @@ $response = [
     "fun_fact" => fetch_fun_fact($number)
 ];
 
+http_response_code(200);
 echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 ?>
