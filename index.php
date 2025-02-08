@@ -1,68 +1,54 @@
 <?php
+header('Content-Type: application/json');
 
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET");
-
-if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
-    echo json_encode(["number" => $_GET['number'] ?? null, "error" => true]);
-    exit;
-}
-
-$number = intval($_GET['number']);
-
-function isPrime($num) {
+function is_prime($num) {
     if ($num < 2) return false;
     for ($i = 2; $i * $i <= $num; $i++) {
-        if ($num % $i == 0) return false;
+        if ($num % $i === 0) return false;
     }
     return true;
 }
 
-function isPerfect($num) {
+function is_perfect($num) {
     $sum = 0;
     for ($i = 1; $i < $num; $i++) {
-        if ($num % $i == 0) $sum += $i;
+        if ($num % $i === 0) $sum += $i;
     }
     return $sum === $num;
 }
 
-function isArmstrong($num) {
-    $sum = 0;
-    $digits = str_split((string) $num);
-    $power = count($digits);
-    foreach ($digits as $digit) {
-        $sum += pow((int)$digit, $power);
-    }
-    return $sum === $num;
+function is_armstrong($num) {
+    $digits = str_split($num);
+    $sum = array_sum(array_map(fn($d) => pow($d, count($digits)), $digits));
+    return $sum == $num;
 }
 
-function digitSum($num) {
-    return array_sum(str_split((string) $num));
+function fetch_fun_fact($num) {
+    $url = "http://numbersapi.com/$num/math?json";
+    $response = file_get_contents($url);
+    return $response ? json_decode($response, true)['text'] : "No fun fact available.";
 }
 
-function fetchFunFact($num) {
-    $url = "http://numbersapi.com/" . $num . "/math";
-    return file_get_contents($url) ?: "No fact available";
+if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
+    http_response_code(400);
+    echo json_encode(["error" => true, "message" => "Invalid number"]);
+    exit;
 }
 
+$number = intval($_GET['number']);
 $properties = [];
-if ($number % 2 == 0) {
-    $properties[] = "even";
-} else {
-    $properties[] = "odd";
-}
-if (isArmstrong($number)) {
-    array_unshift($properties, "armstrong");
-}
+
+if (is_armstrong($number)) $properties[] = "armstrong";
+$properties[] = ($number % 2 === 0) ? "even" : "odd";
 
 $response = [
     "number" => $number,
-    "is_prime" => isPrime($number),
-    "is_perfect" => isPerfect($number),
+    "is_prime" => is_prime($number),
+    "is_perfect" => is_perfect($number),
     "properties" => $properties,
-    "digit_sum" => digitSum($number),
-    "fun_fact" => fetchFunFact($number)
+    "digit_sum" => array_sum(str_split($number)),
+    "fun_fact" => fetch_fun_fact($number)
 ];
 
-echo json_encode($response, JSON_PRETTY_PRINT);
+echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+?>
