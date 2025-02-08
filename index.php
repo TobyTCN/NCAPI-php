@@ -11,6 +11,7 @@ function is_prime($num) {
 }
 
 function is_perfect($num) {
+    if ($num <= 0) return false;
     $sum = 0;
     for ($i = 1; $i < $num; $i++) {
         if ($num % $i === 0) $sum += $i;
@@ -19,9 +20,10 @@ function is_perfect($num) {
 }
 
 function is_armstrong($num) {
-    $digits = str_split($num);
+    $absNum = abs($num); // Handle negative numbers
+    $digits = str_split((string) $absNum);
     $sum = array_sum(array_map(fn($d) => pow($d, count($digits)), $digits));
-    return $sum == $num;
+    return $sum == $absNum;
 }
 
 function fetch_fun_fact($num) {
@@ -34,7 +36,7 @@ function fetch_fun_fact($num) {
     return isset($data['text']) ? $data['text'] : "No fun fact available.";
 }
 
-if (!isset($_GET['number']) || !ctype_digit($_GET['number'])) {
+if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
     http_response_code(400);
     echo json_encode([
         "number" => $_GET['number'] ?? null,
@@ -43,7 +45,7 @@ if (!isset($_GET['number']) || !ctype_digit($_GET['number'])) {
     exit;
 }
 
-$number = intval($_GET['number']);
+$number = $_GET['number'] + 0; // Convert to appropriate numeric type
 $properties = [];
 
 if (is_armstrong($number)) {
@@ -57,7 +59,7 @@ $response = [
     "is_prime" => is_prime($number),
     "is_perfect" => is_perfect($number),
     "properties" => $properties,
-    "digit_sum" => array_sum(str_split($number)),
+    "digit_sum" => array_sum(str_split((string) abs($number))),
     "fun_fact" => fetch_fun_fact($number)
 ];
 
