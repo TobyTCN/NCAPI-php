@@ -25,13 +25,20 @@ function is_armstrong($num) {
 
 function fetch_fun_fact($num) {
     $url = "http://numbersapi.com/$num/math?json";
-    $response = file_get_contents($url);
-    return $response ? json_decode($response, true)['text'] : "No fun fact available.";
+    $response = @file_get_contents($url);
+    if ($response === false) {
+        return "No fun fact available.";
+    }
+    $data = json_decode($response, true);
+    return isset($data['text']) ? $data['text'] : "No fun fact available.";
 }
 
 if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
     http_response_code(400);
-    echo json_encode(["error" => true, "message" => "Invalid number"]);
+    echo json_encode([
+        "number" => $_GET['number'] ?? null,
+        "error" => true
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     exit;
 }
 
